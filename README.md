@@ -109,6 +109,10 @@ vman install github.com/ctxcode/valk-raylib
   let model = raylib.load_model_from_mesh(builder.build())
   ```
 
+  `MeshBuilder{ normals: false }` leaves out the normals, for shaders that do not use
+  them, and `build(keep_data: false)` frees raylib's CPU copy of the vertices once they are
+  on the GPU. Both save memory when there are many meshes, like the chunks of a voxel world.
+
 - **Shaders:** `shader.location("name")`, `shader.set_float/set_int/set_vec2/set_vec3/set_vec4/
   set_color/set_matrix(location, value)` and `shader.set_location(.matrix_model, location)`.
 - **Models:** `model.set_texture(texture)`, `model.set_shader(shader)`, `model.mesh(i)`,

@@ -14,9 +14,12 @@ use valk.mem
 /// defer raylib.unload_mesh(mesh)
 /// ```
 + class MeshBuilder {
+    /// Whether vertices keep their normal. Turn it off for a shader that does not use
+    /// normals: the mesh gets none, and a third less memory.
+    + normals: bool (true)
     ~ positions: Array[f32] (.{})
     ~ texcoords: Array[f32] (.{})
-    ~ normals: Array[f32] (.{})
+    ~ normal_values: Array[f32] (.{})
     ~ colors: Array[u8] (.{})
     ~ indices: Array[u16] (.{})
 
@@ -33,9 +36,11 @@ use valk.mem
         this.positions.append(position.z)
         this.texcoords.append(uv.x)
         this.texcoords.append(uv.y)
-        this.normals.append(normal.x)
-        this.normals.append(normal.y)
-        this.normals.append(normal.z)
+        if this.normals {
+            this.normal_values.append(normal.x)
+            this.normal_values.append(normal.y)
+            this.normal_values.append(normal.z)
+        }
         this.colors.append(color.r)
         this.colors.append(color.g)
         this.colors.append(color.b)
@@ -55,7 +60,7 @@ use valk.mem
     + fn clear() {
         this.positions.clear()
         this.texcoords.clear()
-        this.normals.clear()
+        this.normal_values.clear()
         this.colors.clear()
         this.indices.clear()
     }
@@ -64,9 +69,13 @@ use valk.mem
     /// window. Pass `upload: false` to keep it on the CPU, e.g. for `get_mesh_bounding_box`.
     /// Free it with `unload_mesh`, or through `unload_model` once a model owns it.
     ///
+    /// raylib keeps a copy of the vertices next to the one on the GPU. `keep_data: false`
+    /// frees it after the upload: the mesh still draws and unloads, but its vertices can no
+    /// longer be read, e.g. by `get_mesh_bounding_box`.
+    ///
     /// Panics when indices name a vertex that was not added, or when an indexed mesh has
     /// more than 65536 vertices.
-    + fn build(upload: bool (true), dynamic: bool (false)) Mesh {
+    + fn build(upload: bool (true), dynamic: bool (false), keep_data: bool (true)) Mesh {
         let count = this.vertex_count
         let indexed = this.indices.length > 0
         if indexed {
@@ -80,11 +89,26 @@ use valk.mem
             triangle_count: (indexed ? this.indices.length / 3 : count / 3).to(i32)
             vertices: copy_to_raylib[f32](this.positions)
             texcoords: copy_to_raylib[f32](this.texcoords)
-            normals: copy_to_raylib[f32](this.normals)
+            normals: copy_to_raylib[f32](this.normal_values)
             colors: copy_to_raylib[u8](this.colors)
             indices: indexed ? copy_to_raylib[u16](this.indices) : null
         }
-        if upload : mesh.upload(dynamic)
+        if upload {
+            mesh.upload(dynamic)
+            if !keep_data {
+                @unsafe
+                MemFree(mesh.vertices)
+                MemFree(mesh.texcoords)
+                MemFree(mesh.normals)
+                MemFree(mesh.colors)
+                MemFree(mesh.indices)
+                mesh.vertices = null
+                mesh.texcoords = null
+                mesh.normals = null
+                mesh.colors = null
+                mesh.indices = null
+            }
+        }
         return mesh
     }
 }

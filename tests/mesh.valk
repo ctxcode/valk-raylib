@@ -31,3 +31,11 @@ test "Meshes: built on the CPU" {
     assert(plain.triangle_count == 1 && !isset(plain.indices))
     raylib.unload_mesh(plain)
 }
+
+test "Meshes: without normals" {
+    let builder = raylib.MeshBuilder{ normals: false }
+    quad(builder)
+    let mesh = builder.build(false)
+    assert(mesh.vertex_count == 4 && !isset(mesh.normals) && isset(mesh.vertices))
+    raylib.unload_mesh(mesh)
+}

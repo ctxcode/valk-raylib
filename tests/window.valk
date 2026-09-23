@@ -107,6 +107,24 @@ test "Window: draws into a render texture" {
     raylib.end_texture_mode()
     assert(same(pixel(target, 32, 32), raylib.Color.rgb(255, 255, 0)))
 
+    // A mesh without its CPU copy still draws
+    let flat = raylib.MeshBuilder{ normals: false }
+    let fa = flat.vertex(.{ x: -1, y: -1 }, .{}, .{}, raylib.Color.rgb(255, 0, 255))
+    let fb = flat.vertex(.{ x: 1, y: -1 }, .{}, .{}, raylib.Color.rgb(255, 0, 255))
+    let fc = flat.vertex(.{ x: 0, y: 1 }, .{}, .{}, raylib.Color.rgb(255, 0, 255))
+    flat.triangle(fa, fb, fc)
+    let light = flat.build(true, false, false)
+    assert(!isset(light.vertices) && !isset(light.colors) && !isset(light.indices))
+    let plain = raylib.load_material_default()
+    raylib.begin_texture_mode(target)
+    raylib.clear_background(raylib.BLACK)
+    raylib.begin_mode_3d(camera)
+    raylib.draw_mesh(light, plain, raylib.Matrix.identity())
+    raylib.end_mode_3d()
+    raylib.end_texture_mode()
+    assert(same(pixel(target, 32, 32), raylib.Color.rgb(255, 0, 255)))
+    raylib.unload_mesh(light)
+
     // The ray under the middle of the screen points at the camera target
     let ray = raylib.get_screen_to_world_ray_ex(.{ x: 32, y: 32 }, camera, 64, 64)
     assert(ray.direction.z < -0.99)

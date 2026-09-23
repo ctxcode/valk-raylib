@@ -1480,12 +1480,14 @@ alias TextureCubemap for Texture
 + class MeshBuilder {
     ~ colors: Array[u8]
     ~ indices: Array[u16]
-    ~ normals: Array[f32]
+    ~ normal_values: Array[f32]
+    // Whether vertices keep their normal. Turn it off for a shader that does not use normals: the mesh gets none, and a third less memory.
+    + normals: bool
     ~ positions: Array[f32]
     ~ texcoords: Array[f32]
 
     // Copies the vertices into a new `Mesh` and uploads it to the GPU, which needs an open window. Pass `upload: false` to keep it on the CPU, e.g. for `get_mesh_bounding_box`. Free it with `unload_mesh`, or through `unload_model` once a model owns it.
-    + fn build(upload: bool (true), dynamic: bool (false)) Mesh
+    + fn build(upload: bool (true), dynamic: bool (false), keep_data: bool (true)) Mesh
     // Removes every vertex and index, keeping the memory for the next mesh.
     + fn clear() void
     // Adds a triangle of vertices that were added before, by index. A mesh built with indices can only have 65536 vertices.
