@@ -1,0 +1,30 @@
+use raylib
+
+// These call into raylib, passing and returning small structs by value
+
+test "Colors: through raylib" {
+    let red = raylib.RED
+    assert(red.r == 230 && red.g == 41 && red.b == 55 && red.a == 255)
+    assert(raylib.color_to_int(raylib.Color.rgb(255, 0, 0)) == 0xff0000ff.to(i32))
+    let parsed = raylib.get_color(0x11223344)
+    assert(parsed.r == 0x11 && parsed.g == 0x22 && parsed.b == 0x33 && parsed.a == 0x44)
+    assert(raylib.fade(raylib.WHITE, 0.5).a == 127)
+    assert(raylib.RED.alpha(0).a == 0)
+    assert(raylib.color_is_equal(raylib.Color.rgba(1, 2, 3, 4), raylib.Color{ r: 1, g: 2, b: 3, a: 4 }))
+
+    let n = raylib.color_normalize(raylib.Color.rgba(255, 0, 51, 255))
+    assert(n.x == 1 && n.y == 0 && n.z == 0.2 && n.w == 1)
+    let hsv = raylib.color_to_hsv(raylib.Color.rgb(0, 255, 0))
+    assert(hsv.x == 120 && hsv.y == 1 && hsv.z == 1)
+    let blue = raylib.color_from_hsv(240, 1, 1)
+    assert(blue.r == 0 && blue.g == 0 && blue.b == 255)
+    let mid = raylib.color_lerp(raylib.BLACK, raylib.WHITE, 0.5)
+    assert(mid.r == 127 || mid.r == 128)
+}
+
+test "Colors: tint and brightness" {
+    let tinted = raylib.color_tint(raylib.WHITE, raylib.Color.rgb(10, 20, 30))
+    assert(tinted.r == 10 && tinted.g == 20 && tinted.b == 30)
+    let darker = raylib.color_brightness(raylib.Color.rgb(200, 200, 200), -0.5)
+    assert(darker.r == 100)
+}

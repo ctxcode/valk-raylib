@@ -1,0 +1,222 @@
+// Vector and matrix math. raymath is inline C that libraylib does not export,
+// so these follow its formulas in valk.
+
+use valk.math
+
+extend Vector2 {
+    /// Adds the components: `a + b`.
+    + fn add(other: Vector2) Vector2 $add {
+        return Vector2{ x: this.x + other.x, y: this.y + other.y }
+    }
+    /// Subtracts the components: `a - b`.
+    + fn sub(other: Vector2) Vector2 $sub {
+        return Vector2{ x: this.x - other.x, y: this.y - other.y }
+    }
+    /// Multiplies both components by `factor`.
+    + fn scale(factor: f32) Vector2 {
+        return Vector2{ x: this.x * factor, y: this.y * factor }
+    }
+    /// Multiplies the components pairwise.
+    + fn multiply(other: Vector2) Vector2 {
+        return Vector2{ x: this.x * other.x, y: this.y * other.y }
+    }
+    /// The vector pointing the other way.
+    + fn negate() Vector2 {
+        return Vector2{ x: -this.x, y: -this.y }
+    }
+    /// The dot product.
+    + fn dot(other: Vector2) f32 {
+        return this.x * other.x + this.y * other.y
+    }
+    /// The length.
+    + fn length() f32 {
+        return math.sqrt(this.length_sqr()).to(f32)
+    }
+    /// The squared length, cheaper when only comparing lengths.
+    + fn length_sqr() f32 {
+        return this.x * this.x + this.y * this.y
+    }
+    /// The distance between two points.
+    + fn distance(other: Vector2) f32 {
+        return (this - other).length()
+    }
+    /// The vector with length 1 in the same direction; a zero vector stays zero.
+    + fn normalize() Vector2 {
+        let length = this.length()
+        if length == 0 : return this[0]
+        return this.scale(1 / length)
+    }
+    /// The point `amount` of the way to `to`: 0 gives this vector, 1 gives `to`.
+    + fn lerp(to: Vector2, amount: f32) Vector2 {
+        return Vector2{ x: this.x + amount * (to.x - this.x), y: this.y + amount * (to.y - this.y) }
+    }
+    /// The vector rotated by `angle` radians.
+    + fn rotate(angle: f32) Vector2 {
+        let c = math.cos(angle).to(f32)
+        let s = math.sin(angle).to(f32)
+        return Vector2{ x: this.x * c - this.y * s, y: this.x * s + this.y * c }
+    }
+}
+
+extend Vector3 {
+    /// Adds the components: `a + b`.
+    + fn add(other: Vector3) Vector3 $add {
+        return Vector3{ x: this.x + other.x, y: this.y + other.y, z: this.z + other.z }
+    }
+    /// Subtracts the components: `a - b`.
+    + fn sub(other: Vector3) Vector3 $sub {
+        return Vector3{ x: this.x - other.x, y: this.y - other.y, z: this.z - other.z }
+    }
+    /// Multiplies every component by `factor`.
+    + fn scale(factor: f32) Vector3 {
+        return Vector3{ x: this.x * factor, y: this.y * factor, z: this.z * factor }
+    }
+    /// Multiplies the components pairwise.
+    + fn multiply(other: Vector3) Vector3 {
+        return Vector3{ x: this.x * other.x, y: this.y * other.y, z: this.z * other.z }
+    }
+    /// The vector pointing the other way.
+    + fn negate() Vector3 {
+        return Vector3{ x: -this.x, y: -this.y, z: -this.z }
+    }
+    /// The dot product.
+    + fn dot(other: Vector3) f32 {
+        return this.x * other.x + this.y * other.y + this.z * other.z
+    }
+    /// The cross product: perpendicular to both vectors.
+    + fn cross(other: Vector3) Vector3 {
+        return Vector3{
+            x: this.y * other.z - this.z * other.y
+            y: this.z * other.x - this.x * other.z
+            z: this.x * other.y - this.y * other.x
+        }
+    }
+    /// The length.
+    + fn length() f32 {
+        return math.sqrt(this.length_sqr()).to(f32)
+    }
+    /// The squared length, cheaper when only comparing lengths.
+    + fn length_sqr() f32 {
+        return this.x * this.x + this.y * this.y + this.z * this.z
+    }
+    /// The distance between two points.
+    + fn distance(other: Vector3) f32 {
+        return (this - other).length()
+    }
+    /// The vector with length 1 in the same direction; a zero vector stays zero.
+    + fn normalize() Vector3 {
+        let length = this.length()
+        if length == 0 : return this[0]
+        return this.scale(1 / length)
+    }
+    /// The point `amount` of the way to `to`: 0 gives this vector, 1 gives `to`.
+    + fn lerp(to: Vector3, amount: f32) Vector3 {
+        return Vector3{
+            x: this.x + amount * (to.x - this.x)
+            y: this.y + amount * (to.y - this.y)
+            z: this.z + amount * (to.z - this.z)
+        }
+    }
+    /// The point moved by a transform matrix.
+    + fn transform(mat: Matrix) Vector3 {
+        return Vector3{
+            x: mat.m0 * this.x + mat.m4 * this.y + mat.m8 * this.z + mat.m12
+            y: mat.m1 * this.x + mat.m5 * this.y + mat.m9 * this.z + mat.m13
+            z: mat.m2 * this.x + mat.m6 * this.y + mat.m10 * this.z + mat.m14
+        }
+    }
+    /// The vector rotated `angle` radians around `axis` (Rodrigues' formula).
+    + fn rotate_by_axis_angle(axis: Vector3, angle: f32) Vector3 {
+        let v = this[0]
+        let k = axis.normalize()
+        let c = math.cos(angle).to(f32)
+        let s = math.sin(angle).to(f32)
+        return v.scale(c) + k.cross(v).scale(s) + k.scale(k.dot(v) * (1 - c))
+    }
+}
+
+extend Vector4 {
+    /// Adds the components: `a + b`.
+    + fn add(other: Vector4) Vector4 $add {
+        return Vector4{ x: this.x + other.x, y: this.y + other.y, z: this.z + other.z, w: this.w + other.w }
+    }
+    /// Subtracts the components: `a - b`.
+    + fn sub(other: Vector4) Vector4 $sub {
+        return Vector4{ x: this.x - other.x, y: this.y - other.y, z: this.z - other.z, w: this.w - other.w }
+    }
+    /// Multiplies every component by `factor`.
+    + fn scale(factor: f32) Vector4 {
+        return Vector4{ x: this.x * factor, y: this.y * factor, z: this.z * factor, w: this.w * factor }
+    }
+}
+
+extend Matrix {
+    /// The matrix that changes nothing.
+    + static fn identity() Matrix {
+        return Matrix{ m0: 1, m5: 1, m10: 1, m15: 1 }
+    }
+    /// Moves by `x`, `y`, `z`.
+    + static fn translate(x: f32, y: f32, z: f32) Matrix {
+        return Matrix{ m0: 1, m5: 1, m10: 1, m15: 1, m12: x, m13: y, m14: z }
+    }
+    /// Scales each axis.
+    + static fn scaling(x: f32, y: f32, z: f32) Matrix {
+        return Matrix{ m0: x, m5: y, m10: z, m15: 1 }
+    }
+    /// Rotates `angle` radians around the x axis.
+    + static fn rotate_x(angle: f32) Matrix {
+        let c = math.cos(angle).to(f32)
+        let s = math.sin(angle).to(f32)
+        return Matrix{ m0: 1, m5: c, m6: s, m9: -s, m10: c, m15: 1 }
+    }
+    /// Rotates `angle` radians around the y axis.
+    + static fn rotate_y(angle: f32) Matrix {
+        let c = math.cos(angle).to(f32)
+        let s = math.sin(angle).to(f32)
+        return Matrix{ m0: c, m2: -s, m5: 1, m8: s, m10: c, m15: 1 }
+    }
+    /// Rotates `angle` radians around the z axis.
+    + static fn rotate_z(angle: f32) Matrix {
+        let c = math.cos(angle).to(f32)
+        let s = math.sin(angle).to(f32)
+        return Matrix{ m0: c, m1: s, m4: -s, m5: c, m10: 1, m15: 1 }
+    }
+    /// This transform followed by `then`, like raymath's `MatrixMultiply(this, then)`.
+    + fn multiply(then: Matrix) Matrix {
+        let l = this[0]
+        let r = then
+        return Matrix{
+            m0: l.m0 * r.m0 + l.m1 * r.m4 + l.m2 * r.m8 + l.m3 * r.m12
+            m1: l.m0 * r.m1 + l.m1 * r.m5 + l.m2 * r.m9 + l.m3 * r.m13
+            m2: l.m0 * r.m2 + l.m1 * r.m6 + l.m2 * r.m10 + l.m3 * r.m14
+            m3: l.m0 * r.m3 + l.m1 * r.m7 + l.m2 * r.m11 + l.m3 * r.m15
+            m4: l.m4 * r.m0 + l.m5 * r.m4 + l.m6 * r.m8 + l.m7 * r.m12
+            m5: l.m4 * r.m1 + l.m5 * r.m5 + l.m6 * r.m9 + l.m7 * r.m13
+            m6: l.m4 * r.m2 + l.m5 * r.m6 + l.m6 * r.m10 + l.m7 * r.m14
+            m7: l.m4 * r.m3 + l.m5 * r.m7 + l.m6 * r.m11 + l.m7 * r.m15
+            m8: l.m8 * r.m0 + l.m9 * r.m4 + l.m10 * r.m8 + l.m11 * r.m12
+            m9: l.m8 * r.m1 + l.m9 * r.m5 + l.m10 * r.m9 + l.m11 * r.m13
+            m10: l.m8 * r.m2 + l.m9 * r.m6 + l.m10 * r.m10 + l.m11 * r.m14
+            m11: l.m8 * r.m3 + l.m9 * r.m7 + l.m10 * r.m11 + l.m11 * r.m15
+            m12: l.m12 * r.m0 + l.m13 * r.m4 + l.m14 * r.m8 + l.m15 * r.m12
+            m13: l.m12 * r.m1 + l.m13 * r.m5 + l.m14 * r.m9 + l.m15 * r.m13
+            m14: l.m12 * r.m2 + l.m13 * r.m6 + l.m14 * r.m10 + l.m15 * r.m14
+            m15: l.m12 * r.m3 + l.m13 * r.m7 + l.m14 * r.m11 + l.m15 * r.m15
+        }
+    }
+}
+
+extend Color {
+    /// An opaque color.
+    + static fn rgb(r: u8, g: u8, b: u8) Color {
+        return Color{ r: r, g: g, b: b, a: 255 }
+    }
+    /// A color with alpha.
+    + static fn rgba(r: u8, g: u8, b: u8, a: u8) Color {
+        return Color{ r: r, g: g, b: b, a: a }
+    }
+    /// The same color with its alpha set: 0 is transparent, 1 opaque.
+    + fn alpha(alpha: f32) Color {
+        return fade(this[0], alpha)
+    }
+}

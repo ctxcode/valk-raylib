@@ -1,0 +1,48 @@
+use raylib
+
+test "Vectors: arithmetic and length" {
+    let a = raylib.Vector3{ x: 1, y: 2, z: 3 }
+    let b = raylib.Vector3{ x: 4, y: 6, z: 3 }
+    let sum = a + b
+    assert(sum.x == 5 && sum.y == 8 && sum.z == 6)
+    let diff = b - a
+    assert(diff.x == 3 && diff.y == 4 && diff.z == 0)
+    assert(diff.length() == 5)
+    assert(a.distance(b) == 5)
+    assert(a.dot(b) == 4 + 12 + 9)
+    let cross = raylib.Vector3{ x: 1 }.cross(raylib.Vector3{ y: 1 })
+    assert(cross.x == 0 && cross.y == 0 && cross.z == 1)
+    let unit = diff.normalize()
+    assert(unit.x == 0.6 && unit.y == 0.8)
+    assert(raylib.Vector3{}.normalize().length() == 0)
+    let half = a.lerp(b, 0.5)
+    assert(half.x == 2.5 && half.y == 4 && half.z == 3)
+
+    let v = raylib.Vector2{ x: 3, y: 4 }
+    assert(v.length() == 5)
+    assert((v + v).x == 6 && (v - v).y == 0)
+    let turned = raylib.Vector2{ x: 1 }.rotate(raylib.PI.to(f32) / 2)
+    assert(turned.x < 0.0001 && turned.x > -0.0001 && turned.y > 0.9999)
+}
+
+test "Vectors: rotating around an axis" {
+    let x = raylib.Vector3{ x: 1 }
+    let r = x.rotate_by_axis_angle(raylib.Vector3{ y: 1 }, raylib.PI.to(f32) / 2)
+    // A quarter turn around y takes +x to -z
+    assert(r.x < 0.0001 && r.x > -0.0001)
+    assert(r.z < -0.9999)
+}
+
+test "Matrices: transforms apply in order" {
+    let p = raylib.Vector3{ x: 1, y: 1, z: 1 }
+    let moved = p.transform(raylib.Matrix.translate(1, 2, 3))
+    assert(moved.x == 2 && moved.y == 3 && moved.z == 4)
+    // Scale first, then move
+    let m = raylib.Matrix.scaling(2, 2, 2).multiply(raylib.Matrix.translate(1, 0, 0))
+    let q = p.transform(m)
+    assert(q.x == 3 && q.y == 2 && q.z == 2)
+    let same = p.transform(raylib.Matrix.identity())
+    assert(same.x == 1 && same.y == 1 && same.z == 1)
+    let turned = raylib.Vector3{ x: 1 }.transform(raylib.Matrix.rotate_y(raylib.PI.to(f32) / 2))
+    assert(turned.z < -0.9999)
+}

@@ -1,0 +1,119 @@
+// Functions that raylib takes pointers for, wrapped so the caller does not need any
+
+extend Shader {
+    /// The location of a uniform, or -1 when the shader has none by that name.
+    + fn location(uniform: String) i32 {
+        return GetShaderLocation(this[0], uniform.data_cstring)
+    }
+    /// Sets a `float` uniform.
+    + fn set_float(location: i32, value: f32) {
+        let copy = value
+        @unsafe
+        SetShaderValue(this[0], location, @ref(copy), ShaderUniformDataType.float.to(i32))
+    }
+    /// Sets an `int` uniform.
+    + fn set_int(location: i32, value: i32) {
+        let copy = value
+        @unsafe
+        SetShaderValue(this[0], location, @ref(copy), ShaderUniformDataType.int.to(i32))
+    }
+    /// Sets a `vec2` uniform.
+    + fn set_vec2(location: i32, value: Vector2) {
+        let copy = value
+        @unsafe
+        SetShaderValue(this[0], location, @ref(copy), ShaderUniformDataType.vec2.to(i32))
+    }
+    /// Sets a `vec3` uniform.
+    + fn set_vec3(location: i32, value: Vector3) {
+        let copy = value
+        @unsafe
+        SetShaderValue(this[0], location, @ref(copy), ShaderUniformDataType.vec3.to(i32))
+    }
+    /// Sets a `vec4` uniform.
+    + fn set_vec4(location: i32, value: Vector4) {
+        let copy = value
+        @unsafe
+        SetShaderValue(this[0], location, @ref(copy), ShaderUniformDataType.vec4.to(i32))
+    }
+    /// Sets a `vec4` uniform to a color, each channel from 0 to 1.
+    + fn set_color(location: i32, color: Color) {
+        this.set_vec4(location, color_normalize(color))
+    }
+    /// Sets a `mat4` uniform.
+    + fn set_matrix(location: i32, value: Matrix) {
+        SetShaderValueMatrix(this[0], location, value)
+    }
+    /// Points one of the locations raylib fills in by itself, e.g. `.matrix_model`, at a
+    /// uniform of this shader.
+    + fn set_location(index: ShaderLocationIndex, location: i32) {
+        let i = index.to(i32)
+        if i < 0 || i >= 32 || !isset(this.locs) : return
+        @unsafe
+        @ptrv(this.locs.@cast(*[i32]), i32, i.to(uint)) = location
+    }
+}
+
+extend Model {
+    /// The number of meshes.
+    + get mesh_total: uint {
+        return this.mesh_count < 0 ? 0 : this.mesh_count.to(uint)
+    }
+    /// The number of materials.
+    + get material_total: uint {
+        return this.material_count < 0 ? 0 : this.material_count.to(uint)
+    }
+    /// Sets a texture on one of the model's materials; the first by default. Does nothing
+    /// when the model has no such material.
+    + fn set_texture(texture: Texture, map: MaterialMapIndex (.albedo), material: uint (0)) {
+        if material >= this.material_total || !isset(this.materials) : return
+        @unsafe
+        SetMaterialTexture(this.materials.@cast(*[Material]).@offset(material * size_of(Material)).@cast(*Material), map.to(i32), texture)
+    }
+    /// Uses `shader` for one of the model's materials; the first by default.
+    + fn set_shader(shader: Shader, material: uint (0)) {
+        if material >= this.material_total || !isset(this.materials) : return
+        @unsafe
+        @ptrv(this.materials.@cast(*[Material]), Material, material).shader = shader
+    }
+    /// A copy of one of the model's meshes. Panics when there is no such mesh.
+    + fn mesh(index: uint) Mesh {
+        if index >= this.mesh_total || !isset(this.meshes) : panic("Model has no mesh " + index)
+        @unsafe
+        return @ptrv(this.meshes.@cast(*[Mesh]), Mesh, index)
+    }
+}
+
+/// Every pixel of an image as a color, row by row.
++ fn load_image_colors(image: Image) Array[Color] {
+    let count = image.width.to(uint) * image.height.to(uint)
+    let out = Array[Color]{}
+    @unsafe
+    let colors = LoadImageColors(image)
+    if !isset(colors) : return out
+    let i : uint = 0
+    while i < count {
+        @unsafe
+        out.append(@ptrv(colors.@cast(*[Color]), Color, i))
+        i++
+    }
+    @unsafe
+    UnloadImageColors(colors)
+    return out
+}
+
+/// Replaces the pixels of an RGBA texture (`PixelFormat.uncompressed_r8g8b8a8`), row by row.
+/// Panics when the texture has another format or `pixels` is not `width * height` long.
++ fn update_texture(texture: Texture, pixels: local &[Color]) {
+    if texture.format != PixelFormat.uncompressed_r8g8b8a8.to(i32) : panic("update_texture needs an RGBA texture")
+    if pixels.length != texture.width.to(uint) * texture.height.to(uint) : panic("update_texture needs width * height pixels")
+    @unsafe
+    UpdateTexture(texture, pixels.data)
+}
+
+/// Where two line segments cross, or null when they do not.
++ fn check_collision_lines(start1: Vector2, end1: Vector2, start2: Vector2, end2: Vector2) ?Vector2 {
+    let point = Vector2{}
+    @unsafe
+    let hit = CheckCollisionLines(start1, end1, start2, end2, @ref(point))
+    return hit ? point : null
+}

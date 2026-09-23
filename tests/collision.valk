@@ -1,0 +1,37 @@
+use raylib
+
+test "Collisions: 2D" {
+    let a = raylib.Rectangle{ x: 0, y: 0, width: 10, height: 10 }
+    let b = raylib.Rectangle{ x: 5, y: 5, width: 10, height: 10 }
+    assert(raylib.check_collision_recs(a, b))
+    let overlap = raylib.get_collision_rec(a, b)
+    assert(overlap.x == 5 && overlap.y == 5 && overlap.width == 5 && overlap.height == 5)
+    assert(raylib.check_collision_point_rec(.{ x: 1, y: 1 }, a))
+    assert(!raylib.check_collision_point_rec(.{ x: 11, y: 1 }, a))
+    assert(raylib.check_collision_circles(.{ x: 0, y: 0 }, 1, .{ x: 1.5, y: 0 }, 1))
+
+    let cross = raylib.check_collision_lines(.{ x: 0, y: 0 }, .{ x: 2, y: 2 }, .{ x: 0, y: 2 }, .{ x: 2, y: 0 }) ?? raylib.Vector2{ x: -1, y: -1 }
+    assert(cross.x == 1 && cross.y == 1)
+    assert(!isset(raylib.check_collision_lines(.{ x: 0, y: 0 }, .{ x: 1, y: 0 }, .{ x: 0, y: 1 }, .{ x: 1, y: 1 })))
+
+    let square = Array[raylib.Vector2]{ .{ x: 0, y: 0 }, .{ x: 4, y: 0 }, .{ x: 4, y: 4 }, .{ x: 0, y: 4 } }
+    assert(raylib.check_collision_point_poly(.{ x: 2, y: 2 }, square))
+    assert(!raylib.check_collision_point_poly(.{ x: 5, y: 2 }, square))
+}
+
+test "Collisions: rays and boxes" {
+    let box = raylib.BoundingBox{ min: .{ x: -1, y: -1, z: -1 }, max: .{ x: 1, y: 1, z: 1 } }
+    let ray = raylib.Ray{ position: .{ x: 0, y: 0, z: -5 }, direction: .{ x: 0, y: 0, z: 1 } }
+    let hit = raylib.get_ray_collision_box(ray, box)
+    assert(hit.hit)
+    assert(hit.distance == 4)
+    assert(hit.point.z == -1)
+    assert(hit.normal.z == -1)
+    let miss = raylib.get_ray_collision_box(raylib.Ray{ position: .{ x: 5, y: 0, z: -5 }, direction: .{ x: 0, y: 0, z: 1 } }, box)
+    assert(!miss.hit)
+
+    let sphere = raylib.get_ray_collision_sphere(ray, .{ x: 0, y: 0, z: 0 }, 2)
+    assert(sphere.hit && sphere.distance == 3)
+    assert(raylib.check_collision_boxes(box, raylib.BoundingBox{ min: .{ x: 0.5, y: 0.5, z: 0.5 }, max: .{ x: 3, y: 3, z: 3 } }))
+    assert(raylib.check_collision_box_sphere(box, .{ x: 2, y: 0, z: 0 }, 1.5))
+}

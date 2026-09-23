@@ -1,0 +1,9 @@
+{
+    "name": "raylib",
+    "use": "0.7.7",
+    "require": {
+        "valk": {
+            "min": "0.7.7"
+        }
+    }
+}

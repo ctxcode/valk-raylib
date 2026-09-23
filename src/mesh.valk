@@ -1,0 +1,102 @@
+use valk.mem
+
+/// Collects vertices in valk arrays and turns them into a raylib `Mesh`.
+///
+/// Every vertex has a position, texture coordinates, a normal and a color. Without
+/// `index` calls the vertices form triangles three at a time.
+///
+/// ```valk
+/// let builder = raylib.MeshBuilder{}
+/// builder.vertex(.{ x: 0, y: 0, z: 0 }, .{ x: 0, y: 0 }, .{ x: 0, y: 1, z: 0 }, raylib.WHITE)
+/// builder.vertex(.{ x: 1, y: 0, z: 1 }, .{ x: 1, y: 1 }, .{ x: 0, y: 1, z: 0 }, raylib.WHITE)
+/// builder.vertex(.{ x: 1, y: 0, z: 0 }, .{ x: 1, y: 0 }, .{ x: 0, y: 1, z: 0 }, raylib.WHITE)
+/// let mesh = builder.build()
+/// defer raylib.unload_mesh(mesh)
+/// ```
++ class MeshBuilder {
+    ~ positions: Array[f32] (.{})
+    ~ texcoords: Array[f32] (.{})
+    ~ normals: Array[f32] (.{})
+    ~ colors: Array[u8] (.{})
+    ~ indices: Array[u16] (.{})
+
+    /// The number of vertices added so far.
+    + get vertex_count: uint {
+        return this.positions.length / 3
+    }
+
+    /// Adds a vertex and returns its index.
+    + fn vertex(position: Vector3, uv: Vector2, normal: Vector3, color: Color) uint {
+        let index = this.vertex_count
+        this.positions.append(position.x)
+        this.positions.append(position.y)
+        this.positions.append(position.z)
+        this.texcoords.append(uv.x)
+        this.texcoords.append(uv.y)
+        this.normals.append(normal.x)
+        this.normals.append(normal.y)
+        this.normals.append(normal.z)
+        this.colors.append(color.r)
+        this.colors.append(color.g)
+        this.colors.append(color.b)
+        this.colors.append(color.a)
+        return index
+    }
+
+    /// Adds a triangle of vertices that were added before, by index. A mesh built with
+    /// indices can only have 65536 vertices.
+    + fn triangle(a: uint, b: uint, c: uint) {
+        this.indices.append(a.to(u16))
+        this.indices.append(b.to(u16))
+        this.indices.append(c.to(u16))
+    }
+
+    /// Removes every vertex and index, keeping the memory for the next mesh.
+    + fn clear() {
+        this.positions.clear()
+        this.texcoords.clear()
+        this.normals.clear()
+        this.colors.clear()
+        this.indices.clear()
+    }
+
+    /// Copies the vertices into a new `Mesh` and uploads it to the GPU, which needs an open
+    /// window. Pass `upload: false` to keep it on the CPU, e.g. for `get_mesh_bounding_box`.
+    /// Free it with `unload_mesh`, or through `unload_model` once a model owns it.
+    ///
+    /// Panics when indices name a vertex that was not added, or when an indexed mesh has
+    /// more than 65536 vertices.
+    + fn build(upload: bool (true), dynamic: bool (false)) Mesh {
+        let count = this.vertex_count
+        let indexed = this.indices.length > 0
+        if indexed {
+            if count > 65536 : panic("MeshBuilder: an indexed mesh can have at most 65536 vertices")
+            each this.indices as index {
+                if index.to(uint) >= count : panic("MeshBuilder: index " + index + " names no vertex")
+            }
+        }
+        let mesh = Mesh{
+            vertex_count: count.to(i32)
+            triangle_count: (indexed ? this.indices.length / 3 : count / 3).to(i32)
+            vertices: copy_to_raylib[f32](this.positions)
+            texcoords: copy_to_raylib[f32](this.texcoords)
+            normals: copy_to_raylib[f32](this.normals)
+            colors: copy_to_raylib[u8](this.colors)
+            indices: indexed ? copy_to_raylib[u16](this.indices) : null
+        }
+        if upload : mesh.upload(dynamic)
+        return mesh
+    }
+}
+
+// raylib frees mesh data with its own allocator, so it is copied into memory from there
+fn copy_to_raylib[T](values: local &[T]) ?ptr {
+    let bytes = values.length * size_of(T)
+    if bytes == 0 : return null
+    @unsafe
+    let out = MemAlloc(bytes.to(u32))
+    if !isset(out) : panic("raylib could not allocate " + bytes + " bytes")
+    @unsafe
+    mem.copy_bytes(values.data, out, bytes)
+    return out
+}

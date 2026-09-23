@@ -1,0 +1,42 @@
+use raylib
+
+// Images live on the CPU, so these need no window
+
+test "Images: draw and read pixels" {
+    let image = raylib.gen_image_color(4, 3, raylib.BLUE)
+    assert(image.width == 4 && image.height == 3)
+    assert(raylib.is_image_valid(image))
+    image.draw_pixel(1, 2, raylib.RED)
+    image.draw_rectangle(2, 0, 2, 1, raylib.GREEN)
+    assert(raylib.color_is_equal(raylib.get_image_color(image, 1, 2), raylib.RED))
+    assert(raylib.color_is_equal(raylib.get_image_color(image, 3, 0), raylib.GREEN))
+    assert(raylib.color_is_equal(raylib.get_image_color(image, 0, 0), raylib.BLUE))
+
+    let colors = raylib.load_image_colors(image)
+    assert(colors.length == 12)
+    assert(raylib.color_is_equal(colors[2 * 4 + 1], raylib.RED))
+
+    image.flip_vertical()
+    assert(raylib.color_is_equal(raylib.get_image_color(image, 1, 0), raylib.RED))
+    image.resize_nn(8, 6)
+    assert(image.width == 8 && image.height == 6)
+    assert(raylib.color_is_equal(raylib.get_image_color(image, 2, 0), raylib.RED))
+
+    let copy = raylib.image_copy(image)
+    copy.clear_background(raylib.BLACK)
+    assert(raylib.color_is_equal(raylib.get_image_color(copy, 0, 0), raylib.BLACK))
+    assert(raylib.color_is_equal(raylib.get_image_color(image, 0, 0), raylib.BLUE))
+    raylib.unload_image(copy)
+    raylib.unload_image(image)
+}
+
+test "Images: formats and crops" {
+    let image = raylib.gen_image_checked(8, 8, 4, 4, raylib.WHITE, raylib.BLACK)
+    assert(image.format == raylib.PixelFormat.uncompressed_r8g8b8a8.to(i32))
+    image.crop(.{ x: 4, y: 0, width: 4, height: 4 })
+    assert(image.width == 4 && image.height == 4)
+    assert(raylib.color_is_equal(raylib.get_image_color(image, 0, 0), raylib.BLACK))
+    image.convert_format(.uncompressed_grayscale)
+    assert(image.format == raylib.PixelFormat.uncompressed_grayscale.to(i32))
+    raylib.unload_image(image)
+}

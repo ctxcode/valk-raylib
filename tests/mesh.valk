@@ -1,0 +1,33 @@
+use raylib
+
+fn quad(builder: raylib.MeshBuilder) {
+    let up = raylib.Vector3{ y: 1 }
+    let a = builder.vertex(.{ x: 0, y: 0, z: 0 }, .{ x: 0, y: 0 }, up, raylib.WHITE)
+    let b = builder.vertex(.{ x: 0, y: 0, z: 2 }, .{ x: 0, y: 1 }, up, raylib.WHITE)
+    let c = builder.vertex(.{ x: 3, y: 0, z: 2 }, .{ x: 1, y: 1 }, up, raylib.WHITE)
+    let d = builder.vertex(.{ x: 3, y: 1, z: 0 }, .{ x: 1, y: 0 }, up, raylib.RED)
+    builder.triangle(a, b, c)
+    builder.triangle(a, c, d)
+}
+
+test "Meshes: built on the CPU" {
+    let builder = raylib.MeshBuilder{}
+    quad(builder)
+    assert(builder.vertex_count == 4)
+    let mesh = builder.build(false)
+    assert(mesh.vertex_count == 4 && mesh.triangle_count == 2)
+    assert(isset(mesh.vertices) && isset(mesh.indices) && isset(mesh.colors))
+    let bounds = raylib.get_mesh_bounding_box(mesh)
+    assert(bounds.min.x == 0 && bounds.min.y == 0 && bounds.min.z == 0)
+    assert(bounds.max.x == 3 && bounds.max.y == 1 && bounds.max.z == 2)
+    raylib.unload_mesh(mesh)
+
+    builder.clear()
+    assert(builder.vertex_count == 0)
+    builder.vertex(.{}, .{}, .{ y: 1 }, raylib.WHITE)
+    builder.vertex(.{ x: 1 }, .{}, .{ y: 1 }, raylib.WHITE)
+    builder.vertex(.{ z: 1 }, .{}, .{ y: 1 }, raylib.WHITE)
+    let plain = builder.build(false)
+    assert(plain.triangle_count == 1 && !isset(plain.indices))
+    raylib.unload_mesh(plain)
+}

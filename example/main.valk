@@ -1,0 +1,41 @@
+use raylib
+
+// A few cubes, an orbiting camera and some text
+
+fn main() {
+    raylib.set_config_flags(raylib.FLAG_MSAA_4X_HINT | raylib.FLAG_WINDOW_RESIZABLE)
+    raylib.init_window(960, 540, "valk-raylib")
+    defer raylib.close_window()
+    raylib.set_target_fps(60)
+
+    let camera = raylib.Camera3D{
+        position: .{ x: 10, y: 8, z: 10 }
+        target: .{ x: 0, y: 1, z: 0 }
+        up: .{ x: 0, y: 1, z: 0 }
+        fovy: 45
+    }
+    let colors = Array[raylib.Color]{ raylib.RED, raylib.ORANGE, raylib.GOLD, raylib.LIME, raylib.SKYBLUE, raylib.VIOLET }
+
+    while !raylib.window_should_close() {
+        camera.update(.orbital)
+        let time = raylib.get_time().to(f32)
+
+        raylib.begin_drawing()
+        raylib.clear_background(raylib.RAYWHITE)
+        raylib.begin_mode_3d(camera)
+        each colors as color, i {
+            let angle = time + i.to(f32) * raylib.PI.to(f32) / 3
+            let position = raylib.Vector3{ x: 4, y: 1, z: 0 }.rotate_by_axis_angle(.{ y: 1 }, angle)
+            position.y = 1 + (angle * 2).to(f32) % 1
+            raylib.draw_cube(position, 1, 1, 1, color)
+            raylib.draw_cube_wires(position, 1, 1, 1, raylib.DARKGRAY)
+        }
+        raylib.draw_sphere(.{ y: 1 }, 1, raylib.DARKBLUE)
+        raylib.draw_grid(12, 1)
+        raylib.end_mode_3d()
+
+        raylib.draw_text("valk + raylib " + raylib.RAYLIB_VERSION, 12, 12, 24, raylib.DARKGRAY)
+        raylib.draw_fps(12, 44)
+        raylib.end_drawing()
+    }
+}

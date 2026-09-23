@@ -1,0 +1,118 @@
+use raylib
+use valk.core
+
+// Needs a display: runs when VALK_RAYLIB_WINDOW=yes (`make test-window`)
+
+value FOG_SHADER ("#version 330
+in vec2 fragTexCoord;
+in vec4 fragColor;
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+uniform float brightness;
+out vec4 finalColor;
+void main() {
+    finalColor = texture(texture0, fragTexCoord) * colDiffuse * fragColor * vec4(vec3(brightness), 1.0);
+}
+")
+
+fn pixel(target: raylib.RenderTexture, x: i32, y: i32) raylib.Color {
+    let image = raylib.load_image_from_texture(target.texture)
+    // Render textures are stored upside down
+    let color = raylib.get_image_color(image, x, target.texture.height - 1 - y)
+    raylib.unload_image(image)
+    return color
+}
+
+fn same(a: raylib.Color, b: raylib.Color) bool {
+    let dr = a.r.to(i32) - b.r.to(i32)
+    let dg = a.g.to(i32) - b.g.to(i32)
+    let db = a.b.to(i32) - b.b.to(i32)
+    return dr * dr + dg * dg + db * db < 30
+}
+
+test "Window: draws into a render texture" {
+    if (core.getenv("VALK_RAYLIB_WINDOW") !? "") != "yes" : return
+    raylib.set_trace_log_level(.warning)
+    raylib.set_config_flags(raylib.FLAG_WINDOW_HIDDEN)
+    raylib.init_window(64, 64, "valk-raylib test")
+    assert(raylib.is_window_ready())
+
+    let target = raylib.load_render_texture(64, 64)
+    assert(raylib.is_render_texture_valid(target))
+
+    // 2D shapes
+    raylib.begin_texture_mode(target)
+    raylib.clear_background(raylib.Color.rgb(0, 0, 255))
+    raylib.draw_rectangle(0, 0, 32, 32, raylib.Color.rgb(255, 0, 0))
+    raylib.end_texture_mode()
+    assert(same(pixel(target, 10, 10), raylib.Color.rgb(255, 0, 0)))
+    assert(same(pixel(target, 50, 50), raylib.Color.rgb(0, 0, 255)))
+
+    // A mesh from the builder, drawn as a model with a texture set through the helper
+    let builder = raylib.MeshBuilder{}
+    let n = raylib.Vector3{ z: 1 }
+    let a = builder.vertex(.{ x: -1, y: -1 }, .{ x: 0, y: 0 }, n, raylib.WHITE)
+    let b = builder.vertex(.{ x: 1, y: -1 }, .{ x: 1, y: 0 }, n, raylib.WHITE)
+    let c = builder.vertex(.{ x: 1, y: 1 }, .{ x: 1, y: 1 }, n, raylib.WHITE)
+    let d = builder.vertex(.{ x: -1, y: 1 }, .{ x: 0, y: 1 }, n, raylib.WHITE)
+    builder.triangle(a, b, c)
+    builder.triangle(a, c, d)
+    let model = raylib.load_model_from_mesh(builder.build())
+    assert(model.mesh_total == 1 && model.material_total == 1)
+    assert(model.mesh(0).vertex_count == 4)
+
+    let green = raylib.gen_image_color(2, 2, raylib.Color.rgb(0, 255, 0))
+    let texture = raylib.load_texture_from_image(green)
+    raylib.unload_image(green)
+    model.set_texture(texture)
+
+    let camera = raylib.Camera3D{
+        position: .{ x: 0, y: 0, z: 3 }
+        up: .{ y: 1 }
+        fovy: 60
+    }
+    raylib.begin_texture_mode(target)
+    raylib.clear_background(raylib.BLACK)
+    raylib.begin_mode_3d(camera)
+    raylib.draw_model(model, .{}, 1, raylib.WHITE)
+    raylib.end_mode_3d()
+    raylib.end_texture_mode()
+    assert(same(pixel(target, 32, 32), raylib.Color.rgb(0, 255, 0)))
+    assert(same(pixel(target, 1, 1), raylib.BLACK))
+
+    // A shader with a uniform set through the helper
+    let shader = raylib.load_shader_from_memory("", FOG_SHADER)
+    assert(raylib.is_shader_valid(shader))
+    let location = shader.location("brightness")
+    assert(location >= 0)
+    shader.set_float(location, 0.5)
+    model.set_shader(shader)
+    raylib.begin_texture_mode(target)
+    raylib.clear_background(raylib.BLACK)
+    raylib.begin_mode_3d(camera)
+    raylib.draw_model(model, .{}, 1, raylib.WHITE)
+    raylib.end_mode_3d()
+    raylib.end_texture_mode()
+    assert(same(pixel(target, 32, 32), raylib.Color.rgb(0, 127, 0)))
+
+    // Pixels replaced from valk
+    let pixels = Array[raylib.Color]{}
+    each 0 .. 4 as _ : pixels.append(raylib.Color.rgb(255, 255, 0))
+    raylib.update_texture(texture, pixels)
+    shader.set_float(location, 1)
+    raylib.begin_texture_mode(target)
+    raylib.begin_mode_3d(camera)
+    raylib.draw_model(model, .{}, 1, raylib.WHITE)
+    raylib.end_mode_3d()
+    raylib.end_texture_mode()
+    assert(same(pixel(target, 32, 32), raylib.Color.rgb(255, 255, 0)))
+
+    // The ray under the middle of the screen points at the camera target
+    let ray = raylib.get_screen_to_world_ray_ex(.{ x: 32, y: 32 }, camera, 64, 64)
+    assert(ray.direction.z < -0.99)
+
+    raylib.unload_texture(texture)
+    raylib.unload_model(model)
+    raylib.unload_render_texture(target)
+    raylib.close_window()
+}
