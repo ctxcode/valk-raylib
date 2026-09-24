@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    branches: [ main ]
+
+env:
+  VALK_VERSION: "0.7.7"
+  RAYLIB_VERSION: "6.0"
+
+jobs:
+  test:
+    name: "Test on linux-x64"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install vman
+        run: |
+          curl -fL -o vman.tar.gz https://files.valk-cdn.dev/releases/vman/vman-linux-x64.tar.gz
+          mkdir -p "$HOME/vman"
+          tar -xf vman.tar.gz -C "$HOME/vman"
+          echo "$HOME/vman/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.vman/bin" >> "$GITHUB_PATH"
+
+      - name: Install valk
+        run: vman use "$VALK_VERSION"
+
+      # raylib's own build of the library; it needs libX11 to load. The tests that open a
+      # window are skipped without VALK_RAYLIB_WINDOW.
+      - name: Install raylib
+        run: |
+          sudo apt-get install -y libx11-6
+          curl -fsSL -o raylib.tar.gz "https://github.com/raysan5/raylib/releases/download/$RAYLIB_VERSION/raylib-${RAYLIB_VERSION}_linux_amd64.tar.gz"
+          mkdir -p "$HOME/raylib"
+          tar -xzf raylib.tar.gz -C "$HOME/raylib" --strip-components=1
+          echo "RAYLIB_LIB=$HOME/raylib/lib" >> "$GITHUB_ENV"
+
+      - name: Run the tests
+        run: make test
+
+      - name: Check that the api docs match the source
+        run: |
+          make docs
+          git diff --exit-code docs || { echo "The api docs are out of date, run 'make docs'"; exit 1; }
