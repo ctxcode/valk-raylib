@@ -117,7 +117,6 @@ use valk.mem
 fn copy_to_raylib[T](values: local &[T]) ?ptr {
     let bytes = values.length * size_of(T)
     if bytes == 0 : return null
-    @unsafe
     let out = MemAlloc(bytes.to(u32))
     if !isset(out) : panic("raylib could not allocate " + bytes + " bytes")
     @unsafe

@@ -48,7 +48,6 @@ extend Shader {
     + fn set_location(index: ShaderLocationIndex, location: i32) {
         let i = index.to(i32)
         if i < 0 || i >= 32 || !isset(this.locs) : return
-        @unsafe
         @ptrv(this.locs.@cast(*[i32]), i32, i.to(uint)) = location
     }
 }
@@ -66,19 +65,16 @@ extend Model {
     /// when the model has no such material.
     + fn set_texture(texture: Texture, map: MaterialMapIndex (.albedo), material: uint (0)) {
         if material >= this.material_total || !isset(this.materials) : return
-        @unsafe
         SetMaterialTexture(this.materials.@cast(*[Material]).@offset(material * size_of(Material)).@cast(*Material), map.to(i32), texture)
     }
     /// Uses `shader` for one of the model's materials; the first by default.
     + fn set_shader(shader: Shader, material: uint (0)) {
         if material >= this.material_total || !isset(this.materials) : return
-        @unsafe
         @ptrv(this.materials.@cast(*[Material]), Material, material).shader = shader
     }
     /// A copy of one of the model's meshes. Panics when there is no such mesh.
     + fn mesh(index: uint) Mesh {
         if index >= this.mesh_total || !isset(this.meshes) : panic("Model has no mesh " + index)
-        @unsafe
         return @ptrv(this.meshes.@cast(*[Mesh]), Mesh, index)
     }
 }
@@ -87,16 +83,13 @@ extend Model {
 + fn load_image_colors(image: Image) Array[Color] {
     let count = image.width.to(uint) * image.height.to(uint)
     let out = Array[Color]{}
-    @unsafe
     let colors = LoadImageColors(image)
     if !isset(colors) : return out
     let i : uint = 0
     while i < count {
-        @unsafe
         out.append(@ptrv(colors.@cast(*[Color]), Color, i))
         i++
     }
-    @unsafe
     UnloadImageColors(colors)
     return out
 }
@@ -113,7 +106,6 @@ extend Model {
 /// Where two line segments cross, or null when they do not.
 + fn check_collision_lines(start1: Vector2, end1: Vector2, start2: Vector2, end2: Vector2) ?Vector2 {
     let point = Vector2{}
-    @unsafe
     let hit = CheckCollisionLines(start1, end1, start2, end2, @ref(point))
     return hit ? point : null
 }
