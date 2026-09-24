@@ -24,9 +24,9 @@ fn main() {
         raylib.clear_background(raylib.RAYWHITE)
         raylib.begin_mode_3d(camera)
         each colors as color, i {
-            let angle = time + i.to(f32) * raylib.PI.to(f32) / 3
+            let angle = time + i.to(f32) * raylib.PI / 3
             let position = raylib.Vector3{ x: 4, y: 1, z: 0 }.rotate_by_axis_angle(.{ y: 1 }, angle)
-            position.y = 1 + (angle * 2).to(f32) % 1
+            position.y = 1 + (angle * 2) % 1
             raylib.draw_cube(position, 1, 1, 1, color)
             raylib.draw_cube_wires(position, 1, 1, 1, raylib.DARKGRAY)
         }
