@@ -3,9 +3,7 @@
 [raylib](https://www.raylib.com) for [Valk](https://valk-lang.dev): windows, input, 2D and 3D
 drawing, textures, fonts, models, shaders and audio.
 
-The whole raylib 6.0 API is bound. Its types, enums and functions are generated from the API
-description raylib publishes, and a few helpers are written by hand for the functions that
-take pointers.
+The whole raylib 6.0 API is bound, plus helpers for vectors, matrices, meshes and shaders.
 
 ```rust
 use raylib
@@ -36,19 +34,18 @@ fn main() {
 
 ## Requirements
 
-Valk 0.7.7 or newer: raylib passes structs like `Vector3` and `Color` by value, which
-needs the C calling convention for structs that Valk has since that release.
+Valk 0.7.7 or newer.
 
 raylib 6.0 on the system. Every raylib release on
 [GitHub](https://github.com/raysan5/raylib/releases/tag/6.0) has the library for each
 platform; package managers have it too:
 
-| system | install | tested |
-| --- | --- | --- |
-| Arch | `pacman -S raylib` | the whole suite, with the window tests |
-| macOS | `brew install raylib` | the suite without the window tests, on Sonoma 14.8 (x64) |
-| Windows | `raylib.dll` next to the program, and `raylibdll.lib` to link against | the whole suite, under Wine |
-| other Linux | `raylib-6.0_linux_amd64.tar.gz` from the release | |
+| system | install |
+| --- | --- |
+| Arch | `pacman -S raylib` |
+| macOS | `brew install raylib` |
+| Windows | `raylib.dll` next to the program, and `raylibdll.lib` to link against |
+| other Linux | `raylib-6.0_linux_amd64.tar.gz` from the release |
 
 When raylib is not installed where the linker looks, point the build at its `lib`
 directory, and the program at the shared library when it runs:
@@ -92,12 +89,12 @@ vman install github.com/ctxcode/valk-raylib
 - **Arrays and their count** are one view: `raylib.draw_line_strip(points, raylib.RED)`
   takes an `Array[raylib.Vector2]`, and so does every function that takes a pointer and a count.
 
-## What is written by hand
+## Helpers
 
-- **Math.** raymath is inline C that libraylib does not export, so vectors and matrices get
-  their own methods: `+` and `-`, `scale`, `dot`, `cross`, `length`, `distance`, `normalize`,
-  `lerp`, `transform`, `rotate_by_axis_angle`, and `Matrix.identity/translate/scaling/rotate_x/
-  rotate_y/rotate_z` with `multiply`.
+- **Math.** raymath's functions are methods of the vectors and matrices: `+` and `-`,
+  `scale`, `dot`, `cross`, `length`, `distance`, `normalize`, `lerp`, `transform`,
+  `rotate_by_axis_angle`, and `Matrix.identity/translate/scaling/rotate_x/rotate_y/rotate_z`
+  with `multiply`.
 - **`MeshBuilder`** collects vertices in Valk arrays and builds a `Mesh` from them:
 
   ```rust
