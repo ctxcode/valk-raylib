@@ -349,7 +349,7 @@ def plan(f):
             continue
         if i == 0 and ctype.endswith(" *") and resolve(ctype[:-2]) in METHOD_STRUCTS:
             w.method_of = resolve(ctype[:-2])
-            w.args.append("this.@cast(ptr)")
+            w.args.append("this.@cast(*{})".format(w.method_of))
             i += 1
             continue
         vt = value_type(ctype)
