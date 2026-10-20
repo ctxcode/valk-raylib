@@ -334,6 +334,7 @@ def plan(f):
                 w.note = "An empty string uses raylib's default shader for that stage."
             else:
                 w.args.append("{}.data_cstring".format(name))
+            w.unsafe = True
             i += 1
             continue
         m = re.match(r"^(?:const )?(\w+(?: \w+)?) \*$", ctype)
@@ -344,7 +345,6 @@ def plan(f):
             w.params.append("{}: local &[{}]".format(name, elem))
             w.args.append("{0}.length > 0 ? {0}.data : null".format(name))
             w.args.append("{}.length.to(i32)".format(name))
-            w.unsafe = False
             i += 2
             continue
         if i == 0 and ctype.endswith(" *") and resolve(ctype[:-2]) in METHOD_STRUCTS:

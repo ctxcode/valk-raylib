@@ -235,11 +235,13 @@ extend Image {
 
     /// Draw text (using default font) within an image (destination).
     + fn draw_text(text: String, pos_x: i32, pos_y: i32, font_size: i32, color: Color) {
+        @unsafe
         ImageDrawText(this.@cast(*Image), text.data_cstring, pos_x, pos_y, font_size, color)
     }
 
     /// Draw text (custom sprite font) within an image (destination).
     + fn draw_text_ex(font: Font, text: String, position: Vector2, font_size: f32, spacing: f32, tint: Color) {
+        @unsafe
         ImageDrawTextEx(this.@cast(*Image), font, text.data_cstring, position, font_size, spacing, tint)
     }
 }

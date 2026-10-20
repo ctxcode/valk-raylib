@@ -3,6 +3,7 @@
 extend Shader {
     /// The location of a uniform, or -1 when the shader has none by that name.
     + fn location(uniform: String) i32 {
+        @unsafe
         return GetShaderLocation(this[0], uniform.data_cstring)
     }
     /// Sets a `float` uniform.

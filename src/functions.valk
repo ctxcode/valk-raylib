@@ -2,6 +2,7 @@
 
 /// Initialize window and OpenGL context.
 + fn init_window(width: i32, height: i32, title: String) {
+    @unsafe
     InitWindow(width, height, title.data_cstring)
 }
 /// Close window and unload OpenGL context.
@@ -82,6 +83,7 @@
 }
 /// Set title for window.
 + fn set_window_title(title: String) {
+    @unsafe
     SetWindowTitle(title.data_cstring)
 }
 /// Set window position on screen.
@@ -175,6 +177,7 @@
 }
 /// Set clipboard text content.
 + fn set_clipboard_text(text: String) {
+    @unsafe
     SetClipboardText(text.data_cstring)
 }
 /// Get clipboard text content.
@@ -298,12 +301,14 @@
 ///
 /// An empty string uses raylib's default shader for that stage.
 + fn load_shader(vs_file_name: String, fs_file_name: String) Shader {
+    @unsafe
     return LoadShader(vs_file_name.bytes > 0 ? vs_file_name.data_cstring : null, fs_file_name.bytes > 0 ? fs_file_name.data_cstring : null)
 }
 /// Load shader from code strings and bind default locations.
 ///
 /// An empty string uses raylib's default shader for that stage.
 + fn load_shader_from_memory(vs_code: String, fs_code: String) Shader {
+    @unsafe
     return LoadShaderFromMemory(vs_code.bytes > 0 ? vs_code.data_cstring : null, fs_code.bytes > 0 ? fs_code.data_cstring : null)
 }
 /// Check if a shader is valid (loaded on GPU).
@@ -312,10 +317,12 @@
 }
 /// Get shader uniform location.
 + fn get_shader_location(shader: Shader, uniform_name: String) i32 {
+    @unsafe
     return GetShaderLocation(shader, uniform_name.data_cstring)
 }
 /// Get shader attribute location.
 + fn get_shader_location_attrib(shader: Shader, attrib_name: String) i32 {
+    @unsafe
     return GetShaderLocationAttrib(shader, attrib_name.data_cstring)
 }
 /// Set shader uniform value (matrix 4x4).
@@ -400,6 +407,7 @@
 }
 /// Takes a screenshot of current screen (filename extension defines format).
 + fn take_screenshot(file_name: String) {
+    @unsafe
     TakeScreenshot(file_name.data_cstring)
 }
 /// Setup init configuration flags (view FLAGS).
@@ -408,6 +416,7 @@
 }
 /// Open URL with default system browser (if available).
 + fn open_url(url: String) {
+    @unsafe
     OpenURL(url.data_cstring)
 }
 /// Set the current threshold (minimum) log level.
@@ -416,70 +425,86 @@
 }
 /// Save text data to file (write), string must be '\0' terminated, returns true on success.
 + fn save_file_text(file_name: String, text: String) bool {
+    @unsafe
     return SaveFileText(file_name.data_cstring, text.data_cstring)
 }
 /// Rename file (if exists).
 + fn file_rename(file_name: String, file_rename: String) i32 {
+    @unsafe
     return FileRename(file_name.data_cstring, file_rename.data_cstring)
 }
 /// Remove file (if exists).
 + fn file_remove(file_name: String) i32 {
+    @unsafe
     return FileRemove(file_name.data_cstring)
 }
 /// Copy file from one path to another, dstPath created if it doesn't exist.
 + fn file_copy(src_path: String, dst_path: String) i32 {
+    @unsafe
     return FileCopy(src_path.data_cstring, dst_path.data_cstring)
 }
 /// Move file from one directory to another, dstPath created if it doesn't exist.
 + fn file_move(src_path: String, dst_path: String) i32 {
+    @unsafe
     return FileMove(src_path.data_cstring, dst_path.data_cstring)
 }
 /// Replace text in an existing file.
 + fn file_text_replace(file_name: String, search: String, replacement: String) i32 {
+    @unsafe
     return FileTextReplace(file_name.data_cstring, search.data_cstring, replacement.data_cstring)
 }
 /// Find text in existing file.
 + fn file_text_find_index(file_name: String, search: String) i32 {
+    @unsafe
     return FileTextFindIndex(file_name.data_cstring, search.data_cstring)
 }
 /// Check if file exists.
 + fn file_exists(file_name: String) bool {
+    @unsafe
     return FileExists(file_name.data_cstring)
 }
 /// Check if a directory path exists.
 + fn directory_exists(dir_path: String) bool {
+    @unsafe
     return DirectoryExists(dir_path.data_cstring)
 }
 /// Check file extension (recommended include point: .png, .wav).
 + fn is_file_extension(file_name: String, ext: String) bool {
+    @unsafe
     return IsFileExtension(file_name.data_cstring, ext.data_cstring)
 }
 /// Get file length in bytes (NOTE: GetFileSize() conflicts with windows.h).
 + fn get_file_length(file_name: String) i32 {
+    @unsafe
     return GetFileLength(file_name.data_cstring)
 }
 /// Get pointer to extension for a filename string (includes dot: '.png').
 + fn get_file_extension(file_name: String) String {
+    @unsafe
     let text = GetFileExtension(file_name.data_cstring)
     return isset(text) ? text.to_string() : ""
 }
 /// Get pointer to filename for a path string.
 + fn get_file_name(file_path: String) String {
+    @unsafe
     let text = GetFileName(file_path.data_cstring)
     return isset(text) ? text.to_string() : ""
 }
 /// Get filename string without extension (uses static string).
 + fn get_file_name_without_ext(file_path: String) String {
+    @unsafe
     let text = GetFileNameWithoutExt(file_path.data_cstring)
     return isset(text) ? text.to_string() : ""
 }
 /// Get full path for a given fileName with path (uses static string).
 + fn get_directory_path(file_path: String) String {
+    @unsafe
     let text = GetDirectoryPath(file_path.data_cstring)
     return isset(text) ? text.to_string() : ""
 }
 /// Get previous directory path for a given path (uses static string).
 + fn get_prev_directory_path(dir_path: String) String {
+    @unsafe
     let text = GetPrevDirectoryPath(dir_path.data_cstring)
     return isset(text) ? text.to_string() : ""
 }
@@ -495,26 +520,32 @@
 }
 /// Create directories (including full path requested), returns 0 on success.
 + fn make_directory(dir_path: String) i32 {
+    @unsafe
     return MakeDirectory(dir_path.data_cstring)
 }
 /// Change working directory, return true on success.
 + fn change_directory(dir_path: String) bool {
+    @unsafe
     return ChangeDirectory(dir_path.data_cstring)
 }
 /// Check if a given path is a file or a directory.
 + fn is_path_file(path: String) bool {
+    @unsafe
     return IsPathFile(path.data_cstring)
 }
 /// Check if fileName is valid for the platform/OS.
 + fn is_file_name_valid(file_name: String) bool {
+    @unsafe
     return IsFileNameValid(file_name.data_cstring)
 }
 /// Load directory filepaths, files and directories, no subdirs scan.
 + fn load_directory_files(dir_path: String) FilePathList {
+    @unsafe
     return LoadDirectoryFiles(dir_path.data_cstring)
 }
 /// Load directory filepaths with extension filtering and subdir scan; some filters available: "*.*", "FILES*", "DIRS*".
 + fn load_directory_files_ex(base_path: String, filter: String, scan_subdirs: bool) FilePathList {
+    @unsafe
     return LoadDirectoryFilesEx(base_path.data_cstring, filter.data_cstring, scan_subdirs)
 }
 /// Unload filepaths.
@@ -535,14 +566,17 @@
 }
 /// Get the file count in a directory.
 + fn get_directory_file_count(dir_path: String) u32 {
+    @unsafe
     return GetDirectoryFileCount(dir_path.data_cstring)
 }
 /// Get the file count in a directory with extension filtering and recursive directory scan. Use 'DIR' in the filter string to include directories in the result.
 + fn get_directory_file_count_ex(base_path: String, filter: String, scan_subdirs: bool) u32 {
+    @unsafe
     return GetDirectoryFileCountEx(base_path.data_cstring, filter.data_cstring, scan_subdirs)
 }
 /// Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS.
 + fn load_automation_event_list(file_name: String) AutomationEventList {
+    @unsafe
     return LoadAutomationEventList(file_name.data_cstring)
 }
 /// Unload automation events list from file.
@@ -551,6 +585,7 @@
 }
 /// Export automation events list as text file.
 + fn export_automation_event_list(list: AutomationEventList, file_name: String) bool {
+    @unsafe
     return ExportAutomationEventList(list, file_name.data_cstring)
 }
 /// Set automation event internal base frame to start recording.
@@ -645,6 +680,7 @@
 }
 /// Set internal gamepad mappings (SDL_GameControllerDB).
 + fn set_gamepad_mappings(mappings: String) i32 {
+    @unsafe
     return SetGamepadMappings(mappings.data_cstring)
 }
 /// Set gamepad vibration for both motors (duration in seconds).
@@ -1033,10 +1069,12 @@
 }
 /// Load image from file into CPU memory (RAM).
 + fn load_image(file_name: String) Image {
+    @unsafe
     return LoadImage(file_name.data_cstring)
 }
 /// Load image from RAW file data.
 + fn load_image_raw(file_name: String, width: i32, height: i32, format: PixelFormat, header_size: i32) Image {
+    @unsafe
     return LoadImageRaw(file_name.data_cstring, width, height, format.to(i32), header_size)
 }
 /// Load image from GPU texture data.
@@ -1057,10 +1095,12 @@
 }
 /// Export image data to file, returns true on success.
 + fn export_image(image: Image, file_name: String) bool {
+    @unsafe
     return ExportImage(image, file_name.data_cstring)
 }
 /// Export image as code file defining an array of bytes, returns true on success.
 + fn export_image_as_code(image: Image, file_name: String) bool {
+    @unsafe
     return ExportImageAsCode(image, file_name.data_cstring)
 }
 /// Generate image: plain color.
@@ -1097,6 +1137,7 @@
 }
 /// Generate image: grayscale image from text data.
 + fn gen_image_text(width: i32, height: i32, text: String) Image {
+    @unsafe
     return GenImageText(width, height, text.data_cstring)
 }
 /// Create an image duplicate (useful for transformations).
@@ -1113,10 +1154,12 @@
 }
 /// Create an image from text (default font).
 + fn image_text(text: String, font_size: i32, color: Color) Image {
+    @unsafe
     return ImageText(text.data_cstring, font_size, color)
 }
 /// Create an image from text (custom sprite font).
 + fn image_text_ex(font: Font, text: String, font_size: f32, spacing: f32, tint: Color) Image {
+    @unsafe
     return ImageTextEx(font, text.data_cstring, font_size, spacing, tint)
 }
 /// Get image alpha border rectangle.
@@ -1129,6 +1172,7 @@
 }
 /// Load texture from file into GPU memory (VRAM).
 + fn load_texture(file_name: String) Texture2D {
+    @unsafe
     return LoadTexture(file_name.data_cstring)
 }
 /// Load texture from image data.
@@ -1257,10 +1301,12 @@
 }
 /// Load font from file into GPU memory (VRAM).
 + fn load_font(file_name: String) Font {
+    @unsafe
     return LoadFont(file_name.data_cstring)
 }
 /// Load font from file with extended parameters, use NULL for codepoints and 0 for codepointCount to load the default character set, font size is provided in pixels height.
 + fn load_font_ex(file_name: String, font_size: i32, codepoints: local &[i32]) Font {
+    @unsafe
     return LoadFontEx(file_name.data_cstring, font_size, codepoints.length > 0 ? codepoints.data : null, codepoints.length.to(i32))
 }
 /// Load font from Image (XNA style).
@@ -1281,6 +1327,7 @@
 }
 /// Export font as code file, returns true on success.
 + fn export_font_as_code(font: Font, file_name: String) bool {
+    @unsafe
     return ExportFontAsCode(font, file_name.data_cstring)
 }
 /// Draw current FPS.
@@ -1289,14 +1336,17 @@
 }
 /// Draw text (using default font).
 + fn draw_text(text: String, pos_x: i32, pos_y: i32, font_size: i32, color: Color) {
+    @unsafe
     DrawText(text.data_cstring, pos_x, pos_y, font_size, color)
 }
 /// Draw text using font and additional parameters.
 + fn draw_text_ex(font: Font, text: String, position: Vector2, font_size: f32, spacing: f32, tint: Color) {
+    @unsafe
     DrawTextEx(font, text.data_cstring, position, font_size, spacing, tint)
 }
 /// Draw text using Font and pro parameters (rotation).
 + fn draw_text_pro(font: Font, text: String, position: Vector2, origin: Vector2, rotation: f32, font_size: f32, spacing: f32, tint: Color) {
+    @unsafe
     DrawTextPro(font, text.data_cstring, position, origin, rotation, font_size, spacing, tint)
 }
 /// Draw one character (codepoint).
@@ -1313,10 +1363,12 @@
 }
 /// Measure string width for default font.
 + fn measure_text(text: String, font_size: i32) i32 {
+    @unsafe
     return MeasureText(text.data_cstring, font_size)
 }
 /// Measure string size for Font.
 + fn measure_text_ex(font: Font, text: String, font_size: f32, spacing: f32) Vector2 {
+    @unsafe
     return MeasureTextEx(font, text.data_cstring, font_size, spacing)
 }
 /// Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found.
@@ -1417,6 +1469,7 @@
 }
 /// Load model from files (meshes and materials).
 + fn load_model(file_name: String) Model {
+    @unsafe
     return LoadModel(file_name.data_cstring)
 }
 /// Load model from generated mesh (default material).
@@ -1485,10 +1538,12 @@
 }
 /// Export mesh data to file, returns true on success.
 + fn export_mesh(mesh: Mesh, file_name: String) bool {
+    @unsafe
     return ExportMesh(mesh, file_name.data_cstring)
 }
 /// Export mesh as code file (.h) defining multiple arrays of vertex attributes.
 + fn export_mesh_as_code(mesh: Mesh, file_name: String) bool {
+    @unsafe
     return ExportMeshAsCode(mesh, file_name.data_cstring)
 }
 /// Generate polygonal mesh.
@@ -1617,6 +1672,7 @@
 }
 /// Load wave data from file.
 + fn load_wave(file_name: String) Wave {
+    @unsafe
     return LoadWave(file_name.data_cstring)
 }
 /// Checks if wave data is valid (data loaded and parameters).
@@ -1625,6 +1681,7 @@
 }
 /// Load sound from file.
 + fn load_sound(file_name: String) Sound {
+    @unsafe
     return LoadSound(file_name.data_cstring)
 }
 /// Load sound from wave data.
@@ -1653,10 +1710,12 @@
 }
 /// Export wave data to file, returns true on success.
 + fn export_wave(wave: Wave, file_name: String) bool {
+    @unsafe
     return ExportWave(wave, file_name.data_cstring)
 }
 /// Export wave sample data to code (.h), returns true on success.
 + fn export_wave_as_code(wave: Wave, file_name: String) bool {
+    @unsafe
     return ExportWaveAsCode(wave, file_name.data_cstring)
 }
 /// Play a sound.
@@ -1697,6 +1756,7 @@
 }
 /// Load music stream from file.
 + fn load_music_stream(file_name: String) Music {
+    @unsafe
     return LoadMusicStream(file_name.data_cstring)
 }
 /// Checks if a music stream is valid (context and buffers initialized).
